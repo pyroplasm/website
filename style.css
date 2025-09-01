@@ -1,0 +1,20 @@
+/* Minimal styles for PyroPlasm site to avoid 404s and provide basic layout */
+:root{--primary:#0a7cff;--bg:#ffffff;--text:#222;}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background:var(--bg)}
+.container{max-width:1080px;margin:0 auto;padding:0 16px}
+.navbar{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;z-index:10}
+.navbar .container{display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-menu{list-style:none;display:flex;gap:16px;margin:0;padding:0}
+.nav-link{color:inherit;text-decoration:none;padding:8px 10px;border-radius:6px}
+.nav-link:hover{background:#f5f7fb}
+.btn{border:1px solid var(--primary);color:#fff;background:var(--primary)}
+.section{padding:40px 0}
+.mobile-menu-toggle{display:none;cursor:pointer}
+.mobile-menu-toggle span{display:block;width:24px;height:2px;background:#333;margin:5px 0}
+@media (max-width:768px){
+  .nav-menu{display:none;flex-direction:column;gap:8px;position:absolute;top:64px;right:0;background:#fff;border:1px solid #eee;border-right:0;padding:12px 16px}
+  .nav-menu.open{display:flex}
+  .mobile-menu-toggle{display:block}
+}
+main img{max-width:100%;height:auto}
