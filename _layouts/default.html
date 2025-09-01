@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
+  <link rel="stylesheet" href="{{ "/style.css" | relative_url }}" />
+</head>
+<body>
+  <!-- Navigation (mirrors static index.html) -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h2><a href="{{ "/" | relative_url }}" style="text-decoration:none;color:inherit;">PyroPlasm</a></h2>
+      </div>
+      <ul class="nav-menu">
+        <!-- For the static homepage anchors, link to index.html#... so they work when not on the homepage -->
+        <li><a href="{{ "/index.html#about" | relative_url }}" class="nav-link">About</a></li>
+        <li><a href="{{ "/index.html#problem" | relative_url }}" class="nav-link">The Problem</a></li>
+        <li><a href="{{ "/index.html#solution" | relative_url }}" class="nav-link">Our Solution</a></li>
+        <li><a href="{{ "/index.html#benefits" | relative_url }}" class="nav-link">ESG Benefits</a></li>
+        <li><a href="{{ "/index.html#ownership" | relative_url }}" class="nav-link">Ownership</a></li>
+        <li><a href="{{ "/blog/" | relative_url }}" class="nav-link">Blog</a></li>
+        <li><a href="{{ "/index.html#join" | relative_url }}" class="nav-link btn btn--primary">Join Us</a></li>
+      </ul>
+      <div class="mobile-menu-toggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="section">
+    <div class="container">
+      {{ content }}
+    </div>
+  </main>
+
+  <script src="{{ "/app.js" | relative_url }}"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+title: PyroPlasm
+description: Transforming Waste into Value
+# Keep baseurl empty for user/organization pages; set if deploying under a subpath
+baseurl: ""
+url: "pyroplasm.com"
+
+# Exclude non-site folders/files from Jekyll processing
+exclude:
+  - .github
+
+# Permalinks for posts
+permalink: /blog/:year/:month/:day/:title/
+
+# Markdown processor
+markdown: kramdown
+kramdown:
+  input: GFM
+
+# Collections (defaults suffice for posts)
+collections:
+  posts:
+    output: true
