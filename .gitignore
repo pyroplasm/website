@@ -1,0 +1,7 @@
+# IDE
+.idea/
+# Jekyll build output
+_site/
+# Node modules (if ever used locally)
+node_modules/
+.DS_Store
