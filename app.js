@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeForm();
     initializeModal();
     initializeMobileMenu();
+    initializeBlogList();
 });
 
 // Navigation functionality
@@ -29,6 +30,154 @@ function initializeNavigation() {
     });
 }
 
+// Blog list population
+function initializeBlogList() {
+    const list = document.getElementById('blog-list');
+    const postsContainer = document.getElementById('blog-posts');
+    if (!list && !postsContainer) return;
+
+    fetch('blog.json')
+        .then(r => r.ok ? r.json() : [])
+        .then(async (items) => {
+            if (list) list.innerHTML = '';
+            if (postsContainer) postsContainer.innerHTML = '';
+            if (!Array.isArray(items) || items.length === 0) {
+                if (list) {
+                    const li = document.createElement('li');
+                    li.textContent = 'No posts yet';
+                    list.appendChild(li);
+                }
+                if (postsContainer) {
+                    const p = document.createElement('p');
+                    p.textContent = 'No posts yet';
+                    postsContainer.appendChild(p);
+                }
+                return;
+            }
+            // Render list and full posts in order of appearance
+            for (const item of items) {
+                // list entry
+                if (list) {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.textContent = item.title || 'Untitled';
+                    a.href = `#${slugify(item.title || item.path)}`;
+                    a.className = 'post-link';
+                    li.appendChild(a);
+                    list.appendChild(li);
+                }
+                // fetch and render post
+                if (postsContainer) {
+                    try {
+                        const res = await fetch(item.path);
+                        if (!res.ok) throw new Error('failed');
+                        const mdRaw = await res.text();
+                        const { title, body } = parseFrontMatter(mdRaw, item.title);
+                        const html = renderMarkdown(body);
+                        const article = document.createElement('article');
+                        const id = slugify(title || item.title || item.path);
+                        article.id = id;
+                        article.className = 'post';
+                        const h3 = document.createElement('h3');
+                        h3.textContent = title || item.title || 'Untitled';
+                        article.appendChild(h3);
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'post-content';
+                        contentDiv.innerHTML = html;
+                        article.appendChild(contentDiv);
+                        postsContainer.appendChild(article);
+                    } catch (e) {
+                        const err = document.createElement('p');
+                        err.textContent = `Failed to load post: ${item.title || item.path}`;
+                        postsContainer.appendChild(err);
+                    }
+                }
+            }
+        })
+        .catch(() => {
+            if (list) {
+                const li = document.createElement('li');
+                li.textContent = 'Failed to load posts';
+                list.appendChild(li);
+            }
+            if (postsContainer) {
+                const p = document.createElement('p');
+                p.textContent = 'Failed to load posts';
+                postsContainer.appendChild(p);
+            }
+        });
+}
+
+function slugify(s) {
+    return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
+function parseFrontMatter(text, fallbackTitle) {
+    let title = fallbackTitle;
+    let body = text;
+    const m = text.match(/^---[\s\S]*?---/);
+    if (m) {
+        const fm = m[0];
+        body = text.slice(fm.length).replace(/^\n+/, '');
+        const t = fm.match(/\btitle:\s*"?(.+?)"?(\r?\n|$)/i);
+        if (t) title = t[1].trim();
+    }
+    return { title, body };
+}
+
+// Markdown rendering using marked + DOMPurify
+function renderMarkdown(md) {
+    if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+        // Preprocess to support heading levels 7-10 by converting to inline HTML h6 with data-level
+        const preprocessed = md.replace(/^(#{7,10})\s+(.*)$/gm, (_, hashes, text) => {
+            const lvl = hashes.length;
+            return `<h6 data-level="${lvl}">${escapeHtml(text)}</h6>`;
+        });
+        const rawHtml = marked.parse(preprocessed, { mangle: false, headerIds: true });
+        if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
+            return DOMPurify.sanitize(rawHtml);
+        }
+        return rawHtml;
+    }
+    // Fallback: minimal Markdown renderer to avoid single-line <pre> output
+    // Supports headings (# .. ########## = 10 levels), paragraphs, lists, and basic line breaks.
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    const out = [];
+    let inList = false;
+    function closeList(){ if(inList){ out.push('</ul>'); inList=false; } }
+    for (let line of lines) {
+        const m = line.match(/^(#{1,10})\s+(.*)$/); // up to 10 hashes
+        if (m) {
+            closeList();
+            const lvl = m[1].length;
+            const txt = m[2].trim();
+            out.push(`<h${lvl}>${escapeHtml(txt)}</h${lvl}>`);
+            continue;
+        }
+        if (/^\s*[-*+]\s+/.test(line)) {
+            if (!inList) { out.push('<ul>'); inList = true; }
+            const item = line.replace(/^\s*[-*+]\s+/, '');
+            out.push(`<li>${escapeHtml(item)}</li>`);
+            continue;
+        }
+        if (line.trim() === '') { closeList(); out.push(''); continue; }
+        // paragraph
+        closeList();
+        out.push(`<p>${escapeHtml(line)}</p>`);
+    }
+    closeList();
+    const html = out.join('\n')
+      .replace(/\n{2,}/g, '\n');
+    return html;
+}
+
+function escapeHtml(s){
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 // Mobile menu functionality
 function initializeMobileMenu() {
     const mobileToggle = document.querySelector('.mobile-menu-toggle');
@@ -45,6 +194,7 @@ function initializeMobileMenu() {
 // Form validation and submission
 function initializeForm() {
     const form = document.getElementById('membershipForm');
+    if (!form) return;
     const inputs = form.querySelectorAll('input, textarea');
     
     // Add real-time validation
@@ -229,6 +379,7 @@ function submitForm() {
 // Modal functionality
 function initializeModal() {
     const modal = document.getElementById('successModal');
+    if (!modal) return;
     const closeButton = document.getElementById('closeModal');
     const overlay = modal.querySelector('.modal-overlay');
     
@@ -293,6 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Intersection Observer for scroll animations (optional enhancement)
 function initializeScrollAnimations() {
+    if (typeof IntersectionObserver === 'undefined') return;
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'

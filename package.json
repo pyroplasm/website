@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "build": "node tools/build.js",
-    "dev": "junie dev --open"
+    "dev": "junie dev --open",
+    "test": "node tests/blog.spec.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
   }
 }
